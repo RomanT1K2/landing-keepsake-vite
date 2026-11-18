@@ -34,5 +34,8 @@
     "*.{pug,js,json,md}": [
       "prettier --write"
     ]
-  }
+ }
+  "scripts": {
+  "images": "node scripts/images.js"
+ }
 }
