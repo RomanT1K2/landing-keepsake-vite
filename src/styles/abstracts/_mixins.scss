@@ -27,3 +27,8 @@
     outline-offset: 2px;
   }
 }
+@mixin flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
