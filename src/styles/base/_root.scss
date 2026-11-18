@@ -1,0 +1,23 @@
+@use '../abstracts' as *;
+
+:root {
+  // Генерує --color-accent, --color-teal, --color-text-dark тощо
+  @each $name, $value in $colors {
+    --color-#{$name}: #{$value};
+  }
+
+  // Додатково: у _header.scss у вас вказано var(--color-primary), 
+  // хоча в _variables.scss головний колір називається 'accent'
+  --color-primary: var(--color-accent);
+
+  // Генерує --space-xs, --space-sm, --space-md, --space-lg, --space-xl
+  @each $name, $value in $spacing {
+    --space-#{$name}: #{$value};
+  }
+
+  // Шрифти та ширина контейнера
+  --font-heading: #{$font-heading};
+  --font-body: #{$font-body};
+  --font-logo: #{$font-logo};
+  --container-width: #{$container-width};
+}
