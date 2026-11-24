@@ -1,64 +1,22 @@
-const fs = require('fs');
-const path = require('path');
-const sharp = require('sharp');
+import sharp from 'sharp';
+import fs from 'node:fs';
+import path from 'node:path';
 
-const INPUT_DIR = path.join(__dirname, '../src/raw-images');
-const OUTPUT_DIR = path.join(__dirname, '../src/assets/images');
-const WIDTHS = [400, 800];
+const srcDir = 'images-src';
+const outDir = 'src/assets/images';
 
-if (!fs.existsSync(OUTPUT_DIR)) {
-  fs.mkdirSync(OUTPUT_DIR, { recursive: true });
-}
+// post-* — маленькі мініатюри журналу, решта — картки портфоліо
+const widthsFor = (name) => (name.startsWith('post-') ? [200, 400] : [400, 800, 1200]);
 
-async function processImages() {
-  if (!fs.existsSync(INPUT_DIR)) {
-    console.error(`Директорію ${INPUT_DIR} не знайдено. Створіть її та додайте вихідні файли.`);
-    process.exit(1);
+fs.mkdirSync(outDir, { recursive: true });
+
+for (const file of fs.readdirSync(srcDir)) {
+  const name = path.parse(file).name;
+  for (const w of widthsFor(name)) {
+    const img = sharp(path.join(srcDir, file)).resize({ width: w, withoutEnlargement: true });
+    await img.clone().avif({ quality: 50 }).toFile(`${outDir}/${name}-${w}.avif`);
+    await img.clone().webp({ quality: 75 }).toFile(`${outDir}/${name}-${w}.webp`);
+    await img.clone().jpeg({ quality: 80 }).toFile(`${outDir}/${name}-${w}.jpg`);
   }
-
-  const files = fs.readdirSync(INPUT_DIR).filter((file) =>
-    /\.(jpe?g|png)$/i.test(file)
-  );
-
-  for (const file of files) {
-    const inputPath = path.join(INPUT_DIR, file);
-    const { name, ext } = path.parse(file);
-    const isPng = ext.toLowerCase() === '.png';
-
-    for (const width of WIDTHS) {
-      const pipeline = sharp(inputPath).resize({
-        width,
-        withoutEnlargement: true,
-      });
-
-      await pipeline
-        .clone()
-        .avif({ quality: 65 })
-        .toFile(path.join(OUTPUT_DIR, `${name}-${width}w.avif`));
-
-      await pipeline
-        .clone()
-        .webp({ quality: 80 })
-        .toFile(path.join(OUTPUT_DIR, `${name}-${width}w.webp`));
-
-      if (isPng) {
-        await pipeline
-          .clone()
-          .png({ compressionLevel: 8 })
-          .toFile(path.join(OUTPUT_DIR, `${name}-${width}w.png`));
-      } else {
-        await pipeline
-          .clone()
-          .jpeg({ quality: 82, mozjpeg: true })
-          .toFile(path.join(OUTPUT_DIR, `${name}-${width}w.jpg`));
-      }
-    }
-
-    console.log(`Оброблено: ${file}`);
-  }
+  console.log(`done: ${name}`);
 }
-
-processImages().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
